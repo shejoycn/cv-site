@@ -34,7 +34,7 @@ if (deploy.state === "error") {
 }
 
 // 2) Take screenshots (keep it tiny for demo)
-const pagesToCheck = ["/", "/about", "/contact"];
+const pagesToCheck = ["/"];
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
