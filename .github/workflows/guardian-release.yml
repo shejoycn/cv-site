@@ -1,0 +1,32 @@
+name: AI Deployment Guardian (Release Notes)
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release_notes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install tools
+        working-directory: tools/ai-guardian
+        run: npm ci
+
+      - name: Generate release notes and create GitHub Release (draft)
+        working-directory: tools/ai-guardian
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: node release-notes.js
