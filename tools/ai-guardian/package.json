@@ -1,0 +1,16 @@
+{
+  "name": "ai-guardian",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "pr-review": "node pr-review.js",
+    "visual-check": "node visual-check.js",
+    "build-diagnose": "node build-diagnose.js",
+    "release-notes": "node release-notes.js"
+  },
+  "dependencies": {
+    "@actions/github": "^6.0.0",
+    "node-fetch": "^3.3.2",
+    "playwright": "^1.41.2"
+  }
+}

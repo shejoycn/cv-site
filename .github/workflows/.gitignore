@@ -1,0 +1,72 @@
+# ------------------------------
+# Node / Package managers
+# ------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ------------------------------
+# Environment & secrets
+# ------------------------------
+.env
+.env.*
+!.env.example
+
+# ------------------------------
+# Build / output folders
+# ------------------------------
+dist/
+build/
+out/
+.next/
+.cache/
+coverage/
+reports/
+
+# ------------------------------
+# Playwright / screenshots / test artifacts
+# ------------------------------
+playwright-report/
+test-results/
+*.png
+*.webm
+*.zip
+
+# ------------------------------
+# Logs
+# ------------------------------
+logs/
+*.log
+
+# ------------------------------
+# Netlify
+# ------------------------------
+.netlify/
+.netlify-state.json
+
+# ------------------------------
+# OS files
+# ------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ------------------------------
+# Editor / IDE
+# ------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ------------------------------
+# Temporary files
+# ------------------------------
+tmp/
+temp/
+*.tmp
