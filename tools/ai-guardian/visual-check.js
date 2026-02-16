@@ -19,6 +19,7 @@ const sha = must("HEAD_SHA");
 const GITHUB_TOKEN = must("GITHUB_TOKEN");
 const PR_NUMBER = Number(must("PR_NUMBER"));
 const REPO = must("REPO");
+const PR_BRANCH = must("PR_BRANCH"); // passed from workflow
 const [owner, repo] = REPO.split("/");
 
 const octokit = getOctokit(GITHUB_TOKEN);
@@ -31,7 +32,7 @@ if (!previewUrl) throw new Error("Could not determine Netlify preview URL");
 if (deploy.state === "error") throw new Error(`Netlify deploy is in error state. deployId=${deploy.id}`);
 
 // 2) Take screenshots
-const pagesToCheck = ["/"];
+const pagesToCheck = ["/"]; // keep small for demo
 
 const outDir = path.join(process.cwd(), "artifacts", "screenshots");
 fs.mkdirSync(outDir, { recursive: true });
@@ -48,7 +49,7 @@ for (const p of pagesToCheck) {
   const filePath = path.join(outDir, fileName);
 
   await page.screenshot({ path: filePath, fullPage: true });
-  shots.push({ path: filePath, url });
+  shots.push({ path: filePath, url, fileName });
 }
 await browser.close();
 
@@ -94,7 +95,14 @@ const safeText =
     ? visualReport
     : "⚠️ AI returned an empty response. Check GitHub Actions logs for the raw OpenAI response.";
 
-// Add a note telling where screenshots will be available
+// 4) Build inline image markdown URLs (raw GitHub)
+const basePath = `pr-artifacts/screenshots/pr-${PR_NUMBER}`;
+const rawBase = `https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(PR_BRANCH)}/${basePath}`;
+
+const inlineImagesMd = shots
+  .map((s) => `### ${s.url}\n\n![${s.fileName}](${rawBase}/${encodeURIComponent(s.fileName)})\n`)
+  .join("\n");
+
 await octokit.rest.issues.createComment({
   owner,
   repo,
@@ -105,7 +113,11 @@ await octokit.rest.issues.createComment({
 
 ${safeText}
 
-📎 Screenshots are uploaded as a workflow artifact: **ai-guardian-screenshots**
+---
+
+## 📸 Screenshots (inline)
+
+${inlineImagesMd}
 
 _This is an automated visual QA check._`,
 });
