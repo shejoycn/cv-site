@@ -3,6 +3,7 @@ import { chromium } from "playwright";
 import { callOpenAI } from "./openai.js";
 import { waitForDeployReady } from "./netlify.js";
 import fs from "node:fs";
+import path from "node:path";
 
 import github from "@actions/github";
 const { getOctokit } = github;
@@ -18,6 +19,7 @@ const sha = must("HEAD_SHA");
 const GITHUB_TOKEN = must("GITHUB_TOKEN");
 const PR_NUMBER = Number(must("PR_NUMBER"));
 const REPO = must("REPO");
+const PR_BRANCH = must("PR_BRANCH"); // passed from workflow
 const [owner, repo] = REPO.split("/");
 
 const octokit = getOctokit(GITHUB_TOKEN);
@@ -27,14 +29,13 @@ const deploy = await waitForDeployReady({ siteId, sha });
 const previewUrl = deploy?.deploy_ssl_url || deploy?.ssl_url || deploy?.url;
 
 if (!previewUrl) throw new Error("Could not determine Netlify preview URL");
+if (deploy.state === "error") throw new Error(`Netlify deploy is in error state. deployId=${deploy.id}`);
 
-// If Netlify says the deploy errored, fail so the workflow can run build-diagnose.js
-if (deploy.state === "error") {
-  throw new Error(`Netlify deploy is in error state. deployId=${deploy.id}`);
-}
+// 2) Take screenshots
+const pagesToCheck = ["/"]; // keep small for demo
 
-// 2) Take screenshots (keep it tiny for demo)
-const pagesToCheck = ["/", "/about", "/contact"];
+const outDir = path.join(process.cwd(), "artifacts", "screenshots");
+fs.mkdirSync(outDir, { recursive: true });
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
@@ -44,11 +45,12 @@ for (const p of pagesToCheck) {
   const url = `${previewUrl}${p}`;
   await page.goto(url, { waitUntil: "networkidle", timeout: 120000 });
 
-  const file = `shot-${p.replace(/\W+/g, "_")}.png`;
-  await page.screenshot({ path: file, fullPage: true });
-  shots.push({ path: file, url });
-}
+  const fileName = `shot-${p.replace(/\W+/g, "_") || "root"}.png`;
+  const filePath = path.join(outDir, fileName);
 
+  await page.screenshot({ path: filePath, fullPage: true });
+  shots.push({ path: filePath, url, fileName });
+}
 await browser.close();
 
 // 3) AI visual QA (semantic check)
@@ -93,6 +95,14 @@ const safeText =
     ? visualReport
     : "⚠️ AI returned an empty response. Check GitHub Actions logs for the raw OpenAI response.";
 
+// 4) Build inline image markdown URLs (raw GitHub)
+const basePath = `pr-artifacts/screenshots/pr-${PR_NUMBER}`;
+const rawBase = `https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(PR_BRANCH)}/${basePath}`;
+
+const inlineImagesMd = shots
+  .map((s) => `### ${s.url}\n\n![${s.fileName}](${rawBase}/${encodeURIComponent(s.fileName)})\n`)
+  .join("\n");
+
 await octokit.rest.issues.createComment({
   owner,
   repo,
@@ -102,6 +112,12 @@ await octokit.rest.issues.createComment({
 **Preview:** ${previewUrl}
 
 ${safeText}
+
+---
+
+## 📸 Screenshots (inline)
+
+${inlineImagesMd}
 
 _This is an automated visual QA check._`,
 });
