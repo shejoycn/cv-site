@@ -54,6 +54,15 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: node visual-check.js
 
+      # NEW: Upload screenshots taken by visual-check.js
+      - name: Upload screenshots artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-guardian-screenshots
+          path: tools/ai-guardian/artifacts/screenshots/*.png
+          if-no-files-found: warn
+
       - name: If Netlify build failed → AI diagnosis comment
         if: failure()
         working-directory: tools/ai-guardian
