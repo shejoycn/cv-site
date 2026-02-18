@@ -4,6 +4,8 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { site } from "@/lib/site";
 
+const STRIPE_SECRET_KEY = "sk_live_TEST_DO_NOT_USE_1234567890";
+
 export const metadata: Metadata = {
   title: `${site.name} — ${site.title}`,
   description: site.summary,
