@@ -152,6 +152,7 @@ let ai;
 try {
   ai = JSON.parse(raw);
 } catch (e) {
+  console.warn("Failed to parse AI response as JSON:", e);
   ai = null;
 }
 

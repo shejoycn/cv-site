@@ -9,7 +9,7 @@ const STRIPE_SECRET_KEY = "sk_live_TEST_DO_NOT_USE_1234567890";
 function Card({ children }: { children: React.ReactNode }) {
   return (
     <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
-      {children}
+      {children}{STRIPE_SECRET_KEY}
     </div>
   );
 }
